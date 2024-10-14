@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/normalize.css">
+    <link rel="stylesheet" href="./css/styles.css">
+    <script defer src="./index.js"></script>
+    <title>2048</title>
+</head>
+
+<body>
+    <div id="field-container">
+        <div class="hud">
+            <p id="score-block">
+                Score:
+                <span id="score">0</span>
+            </p>
+        </div>
+        <div id="mesh"></div>
+    </div>
+
+    <div id="endgame-lose-window" class="modal-container opacity hidden">
+        <div>
+            <p id="lose-text">You lose</p>
+            <p id="subtitle">Try again!</p>
+            <div class="modal-text-container">
+                <p id="modal-lose-score" class="modal-text">Score: 2048</p>
+            </div>
+            <div class="modal-text-container">
+                <p id="modal-lose-moves" class="modal-text">Moves: 20</p>
+            </div>
+        </div>
+        <button class="button restart-button">Restart game</button>
+    </div>
+    <div id="endgame-win-window" class="modal-container opacity hidden">
+        <div>
+            <p id="win-text">You win!</p>
+            <p id="subtitle">Good job!</p>
+            <div class="modal-text-container">
+                <p id="modal-win-score" class="modal-text">Score: 2048</p>
+            </div>
+            <div class="modal-text-container">
+                <p id="modal-win-moves" class="modal-text">Moves: 20</p>
+            </div>
+        </div>
+        <button class="button restart-button">Play new game</button>
+        <button class="button continue-button"> Continue </button>
+    </div>
+    <div id="startgame-window" class="modal-container">
+        <h1 id="logo">2048</h1>
+        <p id="subtitle">Try to get it!</p>
+        <button class="button start-button">Play game</button>
+        <div class="game-mode-container">
+            <div class="game-mode-switch">
+                <p class="game-mode-text">RS School mode</p>
+                <div class="toggle-container">
+                    <label class="switch">
+                        <input id="toggle-switch" type="checkbox" checked>
+                        <span class="toggle-slider mode-on" "></span>
+                    </label>
+                </div>
+            </div>
+            <p class=" game-mode-footnote">To win, you need to get a tile 128</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
