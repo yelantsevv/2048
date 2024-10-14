@@ -1,7 +1,9 @@
 const mesh = document.querySelector("#mesh");
 const columns = 4;
 const rows = 4;
+const newSet = new Set([2]);
 
+const container = document.querySelector("#field-container");
 const score = document.querySelector("#score");
 const endGameLoseWindow = document.querySelector("#endgame-lose-window");
 const endGameWinWindow = document.querySelector("#endgame-win-window");
@@ -40,7 +42,7 @@ function getPlate(num) {
 
 function createPlate(x, y, i) {
   const plate = document.createElement("div");
-  const number = Math.random() > 0.5 ? 4 : 2;
+  const number = [...newSet][Math.floor(Math.random() * newSet.size)];
 
   plate.classList.add("plate");
   plate.textContent = number;
@@ -438,6 +440,7 @@ function changeColorByValue(plate) {
       break;
     }
     case "16": {
+      newSet.add(4);
       plate.style.color = "#6d8813";
       plate.style.backgroundColor = "#d9f21c";
       plate.style.boxShadow = "0 0 2vmin rgba(217, 242, 28, 0.8)";
@@ -477,12 +480,14 @@ function changeColorByValue(plate) {
       break;
     }
     case "1024": {
+      newSet.add(8);
       plate.style.color = "#9b144f";
       plate.style.backgroundColor = "#f01e72";
       plate.style.boxShadow = "0 0 2vmin rgba(240, 30, 114, 0.8)";
       break;
     }
     case "2048": {
+      newSet.add(16);
       plate.style.color = "#838181";
       plate.style.backgroundColor = "#fef3f4";
       plate.style.boxShadow = "0 0 2vmin rgba(254, 243, 244, 0.8)";
@@ -535,3 +540,26 @@ continueButton.addEventListener("click", () => {
   toggle.classList.remove("mode-on");
 });
 
+let clientX, clientY;
+container.addEventListener("touchstart", (e) => {
+  clientX = e.targetTouches[0].clientX;
+  clientY = e.targetTouches[0].clientY;
+});
+
+container.addEventListener("touchend", (e) => {
+  const x = clientX - e.changedTouches[0].clientX;
+  const y = clientY - e.changedTouches[0].clientY;
+  if (Math.abs(x) > Math.abs(y)) {
+    if (x > 0) {
+      moveLeft();
+    } else {
+      moveRight();
+    }
+  } else {
+    if (y > 0) {
+      moveUp();
+    } else {
+      moveDown();
+    }
+  }
+});
