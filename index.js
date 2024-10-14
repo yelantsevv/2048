@@ -545,6 +545,23 @@ container.addEventListener("touchstart", (e) => {
   clientX = e.targetTouches[0].clientX;
   clientY = e.targetTouches[0].clientY;
 });
+var lastY = 1;
+container.addEventListener(
+  "touchmove",
+  function (event) {
+    var lastS = document.documentElement.scrollTop;
+    if (
+      lastS == 0 &&
+      lastY - event.touches[0].clientY < 0 &&
+      event.cancelable
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    lastY = event.touches[0].clientY;
+  },
+  { passive: false }
+);
 
 container.addEventListener("touchend", (e) => {
   const x = clientX - e.changedTouches[0].clientX;
