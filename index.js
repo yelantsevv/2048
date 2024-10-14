@@ -3,6 +3,7 @@ const columns = 4;
 const rows = 4;
 const newSet = new Set([2]);
 
+const container = document.querySelector("#field-container");
 const score = document.querySelector("#score");
 const endGameLoseWindow = document.querySelector("#endgame-lose-window");
 const endGameWinWindow = document.querySelector("#endgame-win-window");
@@ -537,4 +538,28 @@ continueButton.addEventListener("click", () => {
   endGameLoseWindow.classList.add("hidden");
   endGameWinWindow.classList.add("hidden");
   toggle.classList.remove("mode-on");
+});
+
+let clientX, clientY;
+container.addEventListener("touchstart", (e) => {
+  clientX = e.targetTouches[0].clientX;
+  clientY = e.targetTouches[0].clientY;
+});
+
+container.addEventListener("touchend", (e) => {
+  const x = clientX - e.changedTouches[0].clientX;
+  const y = clientY - e.changedTouches[0].clientY;
+  if (Math.abs(x) > Math.abs(y)) {
+    if (x > 0) {
+      moveLeft();
+    } else {
+      moveRight();
+    }
+  } else {
+    if (y > 0) {
+      moveUp();
+    } else {
+      moveDown();
+    }
+  }
 });
