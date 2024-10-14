@@ -3,14 +3,13 @@ const columns = 4;
 const rows = 4;
 const newSet = new Set([2]);
 
-const container = document.querySelector("#field-container");
 const score = document.querySelector("#score");
 const endGameLoseWindow = document.querySelector("#endgame-lose-window");
 const endGameWinWindow = document.querySelector("#endgame-win-window");
 const restartButtons = document.querySelectorAll(".restart-button");
 const startButton = document.querySelector(".start-button");
 const continueButton = document.querySelector(".continue-button");
-const bestResults = document.querySelectorAll(".best-score");
+// const bestResults = document.querySelectorAll(".best-score");
 
 const toggle = document.querySelector(".toggle-slider");
 const modeFootnote = document.querySelector(".game-mode-footnote");
@@ -83,6 +82,10 @@ window.addEventListener("keydown", (event) => {
       keyDown(event);
     }
   }
+});
+
+document.addEventListener("touch", (event) => {
+  keyDown({ key: event.detail });
 });
 
 function keyDown(event) {
@@ -174,7 +177,6 @@ function showEndGameLoseWindow() {
   document.querySelector(
     "#modal-lose-moves"
   ).textContent = `Moves: ${movesCount}`;
-  saveResult();
 }
 
 function showEndGameWinWindow() {
@@ -185,17 +187,20 @@ function showEndGameWinWindow() {
   document.querySelector(
     "#modal-win-moves"
   ).textContent = `Moves: ${movesCount}`;
-  saveResult();
 }
 
 restartButtons.forEach((e) =>
   e.addEventListener("click", () => {
     restartGame();
+    newSet.clear();
+    newSet.add(2);
   })
 );
 
 startButton.addEventListener("click", () => {
   startGame();
+  newSet.clear();
+  newSet.add(2);
 });
 
 function canGroupMove(groupType) {
@@ -336,8 +341,7 @@ function restartGame() {
 }
 
 function clearMesh() {
-  const childsArray = Array.from(mesh.childNodes);
-  childsArray.forEach((child) => {
+  Array.from(mesh.childNodes).forEach((child) => {
     child.remove();
   });
 }
@@ -415,7 +419,7 @@ function waitForMoveEnd(plate) {
 
 function waitForAnimationEnd() {
   return new Promise((resolve) => {
-    this.addEventListener("animationend", resolve, { once: true });
+    document.addEventListener("animationend", resolve, { once: true });
   });
 }
 
@@ -480,7 +484,6 @@ function changeColorByValue(plate) {
       break;
     }
     case "1024": {
-      newSet.add(8);
       plate.style.color = "#9b144f";
       plate.style.backgroundColor = "#f01e72";
       plate.style.boxShadow = "0 0 2vmin rgba(240, 30, 114, 0.8)";
@@ -504,24 +507,6 @@ function changeColorByValue(plate) {
   }
 }
 
-function saveResult() {
-  for (let i = 0; i < 9; i++) {
-    if (
-      Number(score.textContent) > bestResultsArr[i] ||
-      bestResultsArr[i] === undefined
-    ) {
-      if (bestResultsArr.length > 9) {
-        bestResultsArr[9] = Number(score.textContent);
-        break;
-      }
-      bestResultsArr.push(Number(score.textContent));
-      break;
-    }
-  }
-  bestResultsArr.sort((a, b) => b - a);
-  return bestResultsArr;
-}
-
 toggle.addEventListener("click", () => {
   toggle.classList.toggle("mode-on");
 });
@@ -535,48 +520,6 @@ function gameModeSwitch() {
 }
 
 continueButton.addEventListener("click", () => {
-  endGameLoseWindow.classList.add("hidden");
   endGameWinWindow.classList.add("hidden");
   toggle.classList.remove("mode-on");
-});
-
-let clientX, clientY;
-container.addEventListener("touchstart", (e) => {
-  clientX = e.targetTouches[0].clientX;
-  clientY = e.targetTouches[0].clientY;
-});
-var lastY = 1;
-container.addEventListener(
-  "touchmove",
-  function (event) {
-    var lastS = document.documentElement.scrollTop;
-    if (
-      lastS == 0 &&
-      lastY - event.touches[0].clientY < 0 &&
-      event.cancelable
-    ) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    lastY = event.touches[0].clientY;
-  },
-  { passive: false }
-);
-
-container.addEventListener("touchend", (e) => {
-  const x = clientX - e.changedTouches[0].clientX;
-  const y = clientY - e.changedTouches[0].clientY;
-  if (Math.abs(x) > Math.abs(y)) {
-    if (x > 0) {
-      moveLeft();
-    } else {
-      moveRight();
-    }
-  } else {
-    if (y > 0) {
-      moveUp();
-    } else {
-      moveDown();
-    }
-  }
 });
