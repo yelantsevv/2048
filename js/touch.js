@@ -10,7 +10,7 @@ container.addEventListener("touchstart", (event) => {
 
 container.addEventListener(
   "touchmove",
-  function (event) {
+  (event) => {
     const currentScroll = document.documentElement.scrollTop;
     const deltaY = lastY - event.touches[0].clientY;
 
