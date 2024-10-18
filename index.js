@@ -9,7 +9,6 @@ const endGameWinWindow = document.querySelector("#endgame-win-window");
 const restartButtons = document.querySelectorAll(".restart-button");
 const startButton = document.querySelector(".start-button");
 const continueButton = document.querySelector(".continue-button");
-// const bestResults = document.querySelectorAll(".best-score");
 
 const toggle = document.querySelector(".toggle-slider");
 const modeFootnote = document.querySelector(".game-mode-footnote");
@@ -89,26 +88,14 @@ document.addEventListener("touch", (event) => {
 });
 
 function keyDown(event) {
-  switch (event.key) {
-    case "ArrowUp":
-      moveUp();
-      delay();
-      break;
-    case "ArrowDown":
-      moveDown();
-      delay();
-      break;
-    case "ArrowLeft":
-      moveLeft();
-      delay();
-      break;
-    case "ArrowRight":
-      moveRight();
-      delay();
-      break;
-    default:
-      return;
-  }
+  const command = {
+    ArrowUp: moveUp,
+    ArrowDown: moveDown,
+    ArrowLeft: moveLeft,
+    ArrowRight: moveRight,
+  };
+  command[event.key]?.();
+  delay();
 }
 
 function delay() {

@@ -310,7 +310,7 @@ body {
 }
 
 .footer {
-  width: 70vmin;
+  width: 0vmin;
   bottom: 0;
   position: absolute;
   display: flex;
