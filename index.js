@@ -453,9 +453,9 @@ function changeColorByValue(plate) {
       plate.style.color = "#246ba5";
       plate.style.backgroundColor = "#4eb5ff";
       plate.style.boxShadow = "0 0 2vmin rgba(78, 181, 255, 0.8)";
-      if (toggle.classList.contains("mode-on")) {
-        showEndGameWinWindow();
-      }
+      // if (toggle.classList.contains("mode-on")) {
+      //   showEndGameWinWindow();
+      // }
       break;
     }
     case "256": {
@@ -471,13 +471,13 @@ function changeColorByValue(plate) {
       break;
     }
     case "1024": {
+      newSet.add(8);
       plate.style.color = "#9b144f";
       plate.style.backgroundColor = "#f01e72";
       plate.style.boxShadow = "0 0 2vmin rgba(240, 30, 114, 0.8)";
       break;
     }
     case "2048": {
-      newSet.add(16);
       plate.style.color = "#838181";
       plate.style.backgroundColor = "#fef3f4";
       plate.style.boxShadow = "0 0 2vmin rgba(254, 243, 244, 0.8)";
@@ -499,11 +499,11 @@ toggle.addEventListener("click", () => {
 });
 
 function gameModeSwitch() {
-  if (toggle.classList.contains("mode-on")) {
-    modeFootnote.textContent = "To win, you need to get a tile 128";
-  } else {
-    modeFootnote.textContent = "To win, you need to get a tile 2048";
-  }
+  // if (toggle.classList.contains("mode-on")) {
+  //   modeFootnote.textContent = "To win, you need to get a tile 128";
+  // } else {
+  modeFootnote.textContent = "To win, you need to get a tile 2048";
+  // }
 }
 
 continueButton.addEventListener("click", () => {
