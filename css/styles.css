@@ -351,7 +351,7 @@ body {
 .game-mode-switch {
   margin: 16vmin 0 2vmin;
   display: flex;
-  width: 32vmin;
+  /* width: 32vmin; */
 }
 
 .game-mode-text {
@@ -359,6 +359,7 @@ body {
   margin: 0;
   font-size: 3vmin;
   text-align: center;
+  color: #1dee43;
 }
 
 .game-mode-footnote {
