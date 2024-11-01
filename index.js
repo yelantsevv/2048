@@ -481,14 +481,14 @@ function changeColorByValue(plate) {
       plate.style.color = "#838181";
       plate.style.backgroundColor = "#fef3f4";
       plate.style.boxShadow = "0 0 2vmin rgba(254, 243, 244, 0.8)";
-      showEndGameWinWindow();
+      // showEndGameWinWindow();
       break;
     }
     case "4096": {
       plate.style.color = "#000000";
       plate.style.backgroundColor = "#fe0";
       plate.style.boxShadow = "0 0 2vmin rgba(254, 243, 0, 0.8)";
-      showEndGameWinWindow();
+      // showEndGameWinWindow();
       break;
     }
   }
