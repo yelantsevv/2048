@@ -494,7 +494,7 @@ function changeColorByValue(plate) {
   }
 }
 
-toggle.addEventListener("click", () => {
+toggle?.addEventListener("click", () => {
   toggle.classList.toggle("mode-on");
 });
 
