@@ -1,21 +1,30 @@
 const mesh = document.querySelector("#mesh");
 const columns = 4;
 const rows = 4;
-const newSet = new Set([2]);
+const HISTORY_STORAGE_KEY = "2048-game-history";
 
 const score = document.querySelector("#score");
 const endGameLoseWindow = document.querySelector("#endgame-lose-window");
 const endGameWinWindow = document.querySelector("#endgame-win-window");
-const restartButtons = document.querySelectorAll(".restart-button");
+const bestResultsWindow = document.querySelector("#best-results-window");
+const restartButtons = document.querySelectorAll(
+  "#endgame-lose-window .restart-button, #endgame-win-window .restart-button",
+);
 const startButton = document.querySelector(".start-button");
 const continueButton = document.querySelector(".continue-button");
 
 const toggle = document.querySelector(".toggle-slider");
 const modeFootnote = document.querySelector(".game-mode-footnote");
+const gameRecord = document.querySelector(".game-mode-text");
 
 let cells = [];
 let movesCount = 0;
-let bestResultsArr = [];
+let gameResultSaved = false;
+let isMoving = false;
+let maxTileReached = 2;
+let isEndlessMode = false;
+let hasWon = false;
+let savedResultDate = null;
 
 function createGrid() {
   const gridSize = columns * rows;
@@ -40,7 +49,7 @@ function getPlate(num) {
 
 function createPlate(x, y, i) {
   const plate = document.createElement("div");
-  const number = [...newSet][Math.floor(Math.random() * newSet.size)];
+  const number = getSpawnValue();
 
   plate.classList.add("plate");
   plate.textContent = number;
@@ -51,51 +60,100 @@ function createPlate(x, y, i) {
   plate.dataset.index = i;
   document.querySelector("#mesh").append(plate);
   changeColorByValue(plate);
+  return plate;
+}
+
+function getSpawnValue() {
+  let weights = [[2, 100]];
+
+  if (maxTileReached >= 16) {
+    weights = [
+      [2, 85],
+      [4, 15],
+    ];
+  }
+  if (maxTileReached >= 128) {
+    weights = [
+      [2, 75],
+      [4, 20],
+      [8, 5],
+    ];
+  }
+  if (maxTileReached >= 512) {
+    weights = [
+      [2, 65],
+      [4, 22],
+      [8, 10],
+      [16, 3],
+    ];
+  }
+  if (isEndlessMode && maxTileReached >= 2048) {
+    weights = [
+      [2, 60],
+      [4, 22],
+      [8, 12],
+      [16, 5],
+      [32, 1],
+    ];
+  }
+
+  let roll = Math.random() * 100;
+  for (const [value, weight] of weights) {
+    roll -= weight;
+    if (roll < 0) {
+      return value;
+    }
+  }
+
+  return 2;
 }
 
 function getRandomPlate() {
-  let count = 0;
-  if (mesh.childNodes.length < 33) {
-    for (let i = 0; count < 1; i++) {
-      const num = Math.round(Math.random() * 15);
+  const emptyCells = cells.filter((cell) =>
+    isEmpty(Number(cell.dataset.number)),
+  );
 
-      if (getPlate(num) === null) {
-        createPlate(num % columns, Math.floor(num / columns), num);
-        count++;
-      }
-    }
+  if (emptyCells.length === 0) {
+    return null;
   }
+
+  const cell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  const index = Number(cell.dataset.number);
+  return createPlate(index % columns, Math.floor(index / columns), index);
 }
 
 function isEmpty(num) {
   return getPlate(num) === null;
 }
 
-window.addEventListener("keydown", (event) => {
-  if (!document.body.classList.contains("cooldown")) {
-    if (
-      !endGameLoseWindow.classList.contains("hidden") ||
-      !endGameWinWindow.classList.contains("hidden")
-    ) {
-    } else {
-      keyDown(event);
-    }
-  }
-});
+window.addEventListener("keydown", keyDown);
 
 document.addEventListener("touch", (event) => {
   keyDown({ key: event.detail });
 });
 
 function keyDown(event) {
+  if (
+    isMoving ||
+    document.body.classList.contains("cooldown") ||
+    !endGameLoseWindow.classList.contains("hidden") ||
+    !endGameWinWindow.classList.contains("hidden") ||
+    !bestResultsWindow.classList.contains("hidden")
+  ) {
+    return;
+  }
+
   const command = {
     ArrowUp: moveUp,
     ArrowDown: moveDown,
     ArrowLeft: moveLeft,
     ArrowRight: moveRight,
   };
-  command[event.key]?.();
-  delay();
+  const move = command[event.key];
+  if (move) {
+    move();
+    delay();
+  }
 }
 
 function delay() {
@@ -145,49 +203,56 @@ function moveGroupPlates(groupType, promises) {
 }
 
 async function movePlates(groupType) {
-  let promises = [];
-  moveGroupPlates(groupType, promises);
-  await Promise.all(promises);
-  mergePlates();
-  await waitForAnimationEnd(getRandomPlate());
-  if (!anyMoves()) {
-    showEndGameLoseWindow();
+  if (isMoving) {
+    return;
   }
-  movesCount += 1;
+
+  isMoving = true;
+  try {
+    const promises = [];
+    moveGroupPlates(groupType, promises);
+    await Promise.all(promises);
+    const reached2048 = mergePlates();
+    await waitForAnimationEnd(getRandomPlate());
+    movesCount += 1;
+
+    if (reached2048 && !hasWon) {
+      hasWon = true;
+      showEndGameWinWindow();
+    } else if (!anyMoves()) {
+      showEndGameLoseWindow();
+    }
+  } finally {
+    isMoving = false;
+  }
 }
 
 function showEndGameLoseWindow() {
+  saveGameResult("loss");
   endGameLoseWindow.classList.remove("hidden");
-  document.querySelector(
-    "#modal-lose-score"
-  ).textContent = `Score: ${score.textContent}`;
-  document.querySelector(
-    "#modal-lose-moves"
-  ).textContent = `Moves: ${movesCount}`;
+  document.querySelector("#modal-lose-score").textContent =
+    `Score: ${score.textContent}`;
+  document.querySelector("#modal-lose-moves").textContent =
+    `Moves: ${movesCount}`;
 }
 
 function showEndGameWinWindow() {
+  saveGameResult("win");
   endGameWinWindow.classList.remove("hidden");
-  document.querySelector(
-    "#modal-win-score"
-  ).textContent = `Score: ${score.textContent}`;
-  document.querySelector(
-    "#modal-win-moves"
-  ).textContent = `Moves: ${movesCount}`;
+  document.querySelector("#modal-win-score").textContent =
+    `Score: ${score.textContent}`;
+  document.querySelector("#modal-win-moves").textContent =
+    `Moves: ${movesCount}`;
 }
 
 restartButtons.forEach((e) =>
   e.addEventListener("click", () => {
     restartGame();
-    newSet.clear();
-    newSet.add(2);
-  })
+  }),
 );
 
 startButton.addEventListener("click", () => {
   startGame();
-  newSet.clear();
-  newSet.add(2);
 });
 
 function canGroupMove(groupType) {
@@ -311,6 +376,12 @@ function groupByRowReverse() {
 
 function startGame() {
   score.textContent = "0";
+  movesCount = 0;
+  gameResultSaved = false;
+  maxTileReached = 2;
+  isEndlessMode = false;
+  hasWon = false;
+  savedResultDate = null;
   createGrid();
   const cellsNodeList = Array.from(document.querySelectorAll(".cell"));
   cells = cellsNodeList;
@@ -372,14 +443,106 @@ function moveRight() {
 }
 
 function mergePlates() {
+  let reached2048 = false;
   const platesForMerge = document.querySelectorAll(".merged");
   platesForMerge.forEach((elem) => {
     const elemIndex = elem.dataset.index;
     elem.remove();
-    getPlate(elemIndex).textContent *= 2;
-    score.textContent =
-      Number(score.textContent) + Number(getPlate(elemIndex).textContent);
-    changeColorByValue(getPlate(elemIndex));
+    const mergedPlate = getPlate(elemIndex);
+    const mergedValue = Number(mergedPlate.textContent) * 2;
+    mergedPlate.textContent = String(mergedValue);
+    maxTileReached = Math.max(maxTileReached, mergedValue);
+    score.textContent = Number(score.textContent) + mergedValue;
+    changeColorByValue(mergedPlate);
+    if (mergedValue >= 2048) {
+      reached2048 = true;
+    }
+  });
+  return reached2048;
+}
+
+function getGameHistory() {
+  try {
+    const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY));
+    return Array.isArray(history)
+      ? history.filter(
+          (entry) =>
+            entry &&
+            Number.isFinite(Number(entry.score)) &&
+            Number.isFinite(Number(entry.moves)) &&
+            typeof entry.date === "string",
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveGameResult(result) {
+  if (gameResultSaved && !isEndlessMode) {
+    return;
+  }
+
+  const history = getGameHistory();
+  const resultDate = savedResultDate || new Date().toISOString();
+  const entry = {
+    score: Number(score.textContent),
+    moves: movesCount,
+    date: resultDate,
+    result,
+  };
+  const savedEntryIndex = gameResultSaved
+    ? history.findIndex((savedEntry) => savedEntry.date === savedResultDate)
+    : -1;
+
+  if (savedEntryIndex === -1) {
+    history.push(entry);
+  } else {
+    history[savedEntryIndex] = entry;
+  }
+
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  } catch {
+    return;
+  }
+  gameResultSaved = true;
+  savedResultDate = resultDate;
+  renderBestScore();
+}
+
+function renderBestScore() {
+  const bestScore = getGameHistory().reduce(
+    (best, result) => Math.max(best, Number(result.score)),
+    0,
+  );
+  gameRecord.textContent = `Record: ${bestScore}`;
+}
+
+function renderBestResults() {
+  const resultsBox = document.querySelector("#best-results-box");
+  const results = getGameHistory()
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+      return new Date(left.date).getTime() - new Date(right.date).getTime();
+    })
+    .slice(0, 10);
+
+  resultsBox.replaceChildren();
+
+  if (results.length === 0) {
+    resultsBox.textContent = "No results yet";
+    return;
+  }
+
+  results.forEach((result, index) => {
+    const row = document.createElement("div");
+    row.className = "best-result-row";
+    const date = new Date(result.date).toLocaleDateString();
+    row.textContent = `${index + 1}.  ${result.score} points  |  ${result.moves} moves  |  ${date}`;
+    resultsBox.append(row);
   });
 }
 
@@ -404,9 +567,13 @@ function waitForMoveEnd(plate) {
   });
 }
 
-function waitForAnimationEnd() {
+function waitForAnimationEnd(plate) {
+  if (!plate) {
+    return Promise.resolve();
+  }
+
   return new Promise((resolve) => {
-    document.addEventListener("animationend", resolve, { once: true });
+    plate.addEventListener("animationend", resolve, { once: true });
   });
 }
 
@@ -431,7 +598,6 @@ function changeColorByValue(plate) {
       break;
     }
     case "16": {
-      newSet.add(4);
       plate.style.color = "#6d8813";
       plate.style.backgroundColor = "#d9f21c";
       plate.style.boxShadow = "0 0 2vmin rgba(217, 242, 28, 0.8)";
@@ -471,7 +637,6 @@ function changeColorByValue(plate) {
       break;
     }
     case "1024": {
-      newSet.add(8);
       plate.style.color = "#9b144f";
       plate.style.backgroundColor = "#f01e72";
       plate.style.boxShadow = "0 0 2vmin rgba(240, 30, 114, 0.8)";
@@ -481,14 +646,12 @@ function changeColorByValue(plate) {
       plate.style.color = "#838181";
       plate.style.backgroundColor = "#fef3f4";
       plate.style.boxShadow = "0 0 2vmin rgba(254, 243, 244, 0.8)";
-      // showEndGameWinWindow();
       break;
     }
     case "4096": {
       plate.style.color = "#000000";
       plate.style.backgroundColor = "#fe0";
       plate.style.boxShadow = "0 0 2vmin rgba(254, 243, 0, 0.8)";
-      // showEndGameWinWindow();
       break;
     }
   }
@@ -508,5 +671,17 @@ function gameModeSwitch() {
 
 continueButton.addEventListener("click", () => {
   endGameWinWindow.classList.add("hidden");
-  toggle.classList.remove("mode-on");
+  toggle?.classList.remove("mode-on");
+  isEndlessMode = true;
 });
+
+document.querySelector("#best-results-button").addEventListener("click", () => {
+  renderBestResults();
+  bestResultsWindow.classList.remove("hidden");
+});
+
+document.querySelector("#best-results-close").addEventListener("click", () => {
+  bestResultsWindow.classList.add("hidden");
+});
+
+renderBestScore();
